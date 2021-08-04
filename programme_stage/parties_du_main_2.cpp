@@ -187,13 +187,16 @@ void partie_3(void){
 }
 
 void partie_5(void){
+    complex<double> I(0,1);
     application<double,complex<double> > a;
     paquet_d_onde b(1.,2.,3.);
     paquet_d_onde c(1.,2.,3.);
-    a = b+c;
+    constante<double,complex<double> > e(I);
+    a = b+c+e;
     cout << "a(0.)" << a(0.) << endl;
     cout << "b(0.)" << b(0.) << endl;
     cout << "c(0.)" << c(0.) << endl;
+    cout << "e(0.)" << e(0.) << endl;
     application<double,complex<double> > d = a+b;
     cout << "d(0.)" << d(0.) << endl;
     
@@ -205,7 +208,15 @@ void partie_5(void){
     INFO(a);// <-> cout << NOM(a) << a << endl;
     INFO(d);
 }
-
+void partie_6(void){
+    //Pour utiliser les fonctions constantes:
+    constante<int, double> a(3.);
+    INFO(a);
+    application<int,double> b = 3.*a;
+    INFO(b);
+    cout << "b(0.)" << b(0.) << endl;
+    
+}
 
 complex<double> psi_0_X_psi_1_wp(double x_0, double p_0, double sigma_0,double x_1, double p_1, double sigma_1){
     complex<double> result, I(0.,1.),alpha,A,C;

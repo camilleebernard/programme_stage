@@ -84,6 +84,9 @@ template <class A,class B>
 application<A,B>  operator/ (const application<A,B> &,const application<A,B> &);
 */
 
+
+//chercher une fonction qu'on puisse déclarer comme virtuelle pure pour rendre cette classe abstraite.
+
 template <class A,class B> class application {
 protected:
     pair<const application<A,B>*,const application<A,B>*> entrees;
@@ -102,14 +105,17 @@ public:
     
     //essayer ne pas mettre cette def inline
     //friend ostream & operator<< (ostream &,const application<A,B> &);
+    inline virtual ostream & info(ostream & os) const {
+        return os;
+    }
     inline friend ostream & operator<<(ostream & os,const application<A,B> & f){
         //Boost a une fonction qui permet  de mieux afficher les paramètres de type
         //A tester si ça marche pour des types défini par l'utilisateur
-        
         //os << ": "<< typeid(A).name() << "->"<< typeid(B).name() << endl << "cat : " << f.cat << endl << "entrees : (" << f.entrees.first << "," << f.entrees.second << ")";
         os << ": "<< boost::typeindex::type_id<A>().pretty_name()  << "->"<< boost::typeindex::type_id<B>().pretty_name()  << endl;
         switch(f.cat){
             case BASE: os<< "cat : BASE" << endl;
+                f.info(os);
                 break;
             case PLUS: os<< "cat : PLUS" << endl;
                 os << "Adresses des applications en entree : (" << f.entrees.first << "," << f.entrees.second << ")"<<endl<< endl;
@@ -166,21 +172,20 @@ public:
         return h;
     }
     
-    inline friend application<A,B>  operator* (const constante<A,B> & f,const application<A,B> & g){
-        cout<< "mult SCA_f" <<endl;
-        const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
-        cout << "(*adr_f)(5)"<<(*adr_f)(5) << endl;
-        pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
-        application<A,B> h(entrees,MULT);
-        return h;
-    }
-    
     inline friend application<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         application<A,B> h(entrees,DIV);
         return h;
     }
     
+    inline friend application<A,B>  operator* (const constante<A,B> & f,const application<A,B> & g){
+        cout<< "mult SCA_f" <<endl;
+        const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
+        //cout << "(*adr_f)(5)"<<(*adr_f)(5) << endl;
+        pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
+        application<A,B> h(entrees,MULT);
+        return h;
+    }
 
     //Evaluation
     virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
@@ -205,7 +210,6 @@ public:
 template <class A, class B> application<A,B>::application(){
     cat = BASE;
 }
-
 /*
 template <class A, class B> application<A,B>::application(B y){
     cout << "conv implicite" << endl;
@@ -213,7 +217,6 @@ template <class A, class B> application<A,B>::application(B y){
     *this = f;
 }
 */
-
 template <class A, class B> application<A,B>::application(pair<const application<A,B>*, const application<A,B>*> input_entrees,int input_cat){
     cat = input_cat;
     entrees = input_entrees;
@@ -222,8 +225,6 @@ template <class A, class B> application<A,B>::application(pair<const application
 template <class A, class B> application<A,B>::application(const application<A,B> & input_application){
     cat = input_application.cat;
     entrees = input_application.entrees;
-    //parametres_reels = input_application.parametres_reels;
-    //parametres_complexes = input_application.parametres_complexes;
 }
 //rerediger
 template <class A, class B> application<A,B> & application<A,B>::operator= (const application<A,B> & input_application){
@@ -233,12 +234,6 @@ template <class A, class B> application<A,B> & application<A,B>::operator= (cons
     }
     return *this;
 }
-/*
-template <class A, class B> ostream & operator<<(ostream & os,const application<A,B> & f){
-    os << ": "<< NOM(A) << "->"<< NOM(B) << endl << "cat : " << f.cat << endl << "entrees : (" << f.entrees.first << "," << f.entrees.second << ")";
-    return os;
-}
-*/
 template <class A, class B> bool application<A,B>::domaine_def(A x){
     //Par defaut tout R ou tout C
     return true;
@@ -248,8 +243,7 @@ template <class A, class B> bool application<A,B>::domaine_def(A x){
 // Je choisi de la définir mais il y aura une erreur si le constructeur du type/class B requiert des paramètres
 template <class A,class B> B application<A,B>::operator() (A x) const {
     B result;
-    //cout << "nom"<< nom << endl;
-    cout << "catégorie"<< cat << endl;
+    //cout << "catégorie"<< cat << endl;
     switch(cat){
         case PLUS : result = (*entrees.first)(x)+ (*entrees.second)(x);
             return result;
@@ -269,39 +263,6 @@ template <class A,class B> B application<A,B>::operator() (A x) const {
     B y = 1;
     return y;
 }
-/*
-template <class A,class B> application<A,B>  operator+ (const application<A,B> & f,const application<A,B> & g){
-    pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-    application<A,B> h("h",entrees,PLUS);
-    return h;
-}
-
-template <class A,class B> application<A,B>  operator- (const application<A,B> & f,const application<A,B> & g){
-    pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-    application<A,B> h("f",entrees,MOINS);
-    return h;
-}
-
-template <class A,class B> application<A,B>  operator* (const application<A,B> & f,const application<A,B> & g){
-    pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-    application<A,B> h("f",entrees,MULT);
-    return h;
-}
-
-template <class A,class B> application<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
-    pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-    application<A,B> h("f",entrees,DIV);
-    return h;
-}
- */
-
-/*
-template<class A,class B> void info(string nom,const application<A,B> & f){
-    cout << "nom : " << nom << endl;
-//" : " << NOM(A) << "->" << NOM(B) << endl;
-}
-*/
-
 
 /*---------------------------------------*/
 //Cette classe sert uniquement à faire la conversion  B -> application<A,B>
@@ -316,13 +277,19 @@ public:
     constante(B);
     //Evaluation
     B  operator() (A) const;
+    
+    inline ostream & info(ostream & os) const {
+        os << "Application constante égale à "<< y <<endl;
+        return os;
+    }
+    
     inline friend ostream & operator<<(ostream & os,const constante & f){
         //Boost a une fonction qui permet  de mieux afficher les paramètres de type
         //A tester si ça marche pour des types défini par l'utilisateur
         
         //os << ": "<< typeid(A).name() << "->"<< typeid(B).name() << endl << "cat : " << f.cat << endl << "entrees : (" << f.entrees.first << "," << f.entrees.second << ")";
-        os << ": "<< boost::typeindex::type_id<A>().pretty_name()  << "->"<< boost::typeindex::type_id<complex<B> >().pretty_name()  << endl;
-        os << "cat : " << f.cat << endl;
+        os << ": "<< boost::typeindex::type_id<A>().pretty_name()  << "->"<< boost::typeindex::type_id<B>().pretty_name()  << endl;
+        os << "cat : BASE(" << f.cat << ")" << endl;
         os << "Application constante égale à "<< f.y <<endl;
         return os;
     }
@@ -355,6 +322,14 @@ class paquet_d_onde: public application<double,complex<double> > {
         //Evaluation
         complex<double>  operator() (double) const;
     
+    
+    inline ostream & info(ostream & os) const {
+        os << "paquet_d_onde de parametres : "<<endl;
+        os << "mu_x : "<< mu_x <<endl;
+        os << "sigma_x : "<< sigma_x <<endl;
+        os << "mu_xi : "<< mu_xi <<endl;
+        return os;
+    }
     inline friend ostream & operator<<(ostream & os,const paquet_d_onde & f){
         //Boost a une fonction qui permet  de mieux afficher les paramètres de type
         //A tester si ça marche pour des types défini par l'utilisateur

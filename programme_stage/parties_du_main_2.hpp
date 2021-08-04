@@ -64,6 +64,7 @@ using namespace std;
 void partie_0(void);
 void partie_3(void);
 void partie_5(void);
+void partie_6(void);
 
 complex<double> psi_0_X_psi_1_wp(double x_0, double p_0, double sigma_0,double x_1, double p_1, double sigma_1);
 complex<double> psi_0_etX_psi_1_wp(double x_0, double p_0, double sigma_0,double x_1, double p_1, double sigma_1,double t);

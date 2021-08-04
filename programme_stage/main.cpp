@@ -38,7 +38,7 @@ int main(int argc, const char * argv[]) {
     //partie_4();
     
     //Avec parties_du_main_2
-    partie_5();
-    
+    //partie_5();
+    partie_6();
     return 0;
 }
