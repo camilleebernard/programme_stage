@@ -76,12 +76,17 @@ class constante;
 class application_abstraite {
 public:
     inline virtual ostream & info(ostream & os) const {
+        os << "Erreur : Appel de application_abstraite::info()." << endl;
         return os;
     }
+    
     inline friend ostream & operator<<(ostream & os,const application_abstraite & f){
+        //Comme toutes les instances de application_abstraite sont aussi des instances de application<A,B>,
+        //l'instruction suivante doit appeler la fct info::application<A,B>
         f.info(os);
         return os;
     }
+    
     //Evaluation
     //virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
     template<class A,class B> B eval(A);
@@ -92,19 +97,18 @@ template<class A,class B> B application_abstraite::eval(A a){
     return (*adr_f)(a);
 }
 
-
 //chercher une fonction qu'on puisse déclarer comme virtuelle pure pour rendre cette classe abstraite.
 
 template <class A,class B> class application: public application_abstraite {
 protected:
-    pair<const application<A,B>*,const application<A,B>*> entrees;
+    pair<const application_abstraite *,const application_abstraite*> entrees;
     int cat;
 public:
     //constructeur pour une conversion B -> application<A,B> (fct constante)
     //application(B);
     //constructeur
     application(void);
-    application(pair<const application<A,B>*,const application<A,B>*>,int);
+    application(pair<const application_abstraite*,const application_abstraite*>,int);
     
     //constructeur par recopie
     application(const application<A,B> &);
@@ -153,35 +157,37 @@ public:
     //domaine_def
     virtual bool domaine_def(A);
     
-    //friend application<A,B>  operator+<> (un<A,B> &,un<A,B> &);
-    
-    //friend application<A,B>  operator+<> (const application<A,B> &,const application<A,B> &);
-    //friend application<A,B>  operator-<> (const application<A,B> &,const application<A,B> &);
-    //friend application<A,B>  operator*<> (const application<A,B> &,const application<A,B> &);
-    //friend application<A,B>  operator/<> (const application<A,B> &,const application<A,B> &);
     
     //obligé de déclarer les opérateur inline pour que les conversions implicites marchent
     
     inline friend application<A,B>  operator+ (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        const application_abstraite* adr_f = &f;
+        const application_abstraite* adr_g = &g;
+        pair<const application_abstraite*,const application_abstraite*> entrees(adr_f,adr_g);
         application<A,B> h(entrees,PLUS);
         return h;
     }
 
     inline friend application<A,B>  operator- (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        const application_abstraite* adr_f = &f;
+        const application_abstraite* adr_g = &g;
+        pair<const application_abstraite*,const application_abstraite*> entrees(adr_f,adr_g);
         application<A,B> h(entrees,MOINS);
         return h;
     }
 
     inline friend application<A,B>  operator* (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        const application_abstraite* adr_f = &f;
+        const application_abstraite* adr_g = &g;
+        pair<const application_abstraite*,const application_abstraite*> entrees(adr_f,adr_g);
         application<A,B> h(entrees,MULT);
         return h;
     }
     
     inline friend application<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        const application_abstraite* adr_f = &f;
+        const application_abstraite* adr_g = &g;
+        pair<const application_abstraite*,const application_abstraite*> entrees(adr_f,adr_g);
         application<A,B> h(entrees,DIV);
         return h;
     }
@@ -189,8 +195,7 @@ public:
     inline friend application<A,B>  operator* (const constante<A,B> & f,const application<A,B> & g){
         cout<< "mult SCA_f" <<endl;
         const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
-        //cout << "(*adr_f)(5)"<<(*adr_f)(5) << endl;
-        pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
+        pair<const application_abstraite*,const application_abstraite*> entrees(adr_f,&g);
         application<A,B> h(entrees,MULT);
         return h;
     }
@@ -225,7 +230,7 @@ template <class A, class B> application<A,B>::application(B y){
     *this = f;
 }
 */
-template <class A, class B> application<A,B>::application(pair<const application<A,B>*, const application<A,B>*> input_entrees,int input_cat){
+template <class A, class B> application<A,B>::application(pair<const application_abstraite*,const application_abstraite*> input_entrees,int input_cat){
     cat = input_cat;
     entrees = input_entrees;
 }
@@ -253,15 +258,28 @@ template <class A,class B> B application<A,B>::operator() (A x) const {
     B result;
     //cout << "catégorie"<< cat << endl;
     switch(cat){
-        case PLUS : result = (*entrees.first)(x)+ (*entrees.second)(x);
+        case PLUS : result = (*entrees.first)(x)+ (*entrees.first)(x);
             return result;
-        case MOINS : result = (*entrees.first)(x)- (*entrees.second)(x);
+        case MOINS : result = (*entrees.first)(x)- (*entrees.first)(x);
             return result;
-        case MULT : result = ((*entrees.first)(x))* ((*entrees.second)(x));
+        case MULT : result = (*entrees.first)(x)* (*entrees.first)(x);
             return result;
-        case DIV :result = ((*entrees.first)(x))/ ((*entrees.second)(x));
+        case DIV :result = (*entrees.first)(x)/ (*entrees.first)(x);
             return result;
     }
+    /*
+    switch(cat){
+        case PLUS : result = (*entrees.first).eval(x)+ (*entrees.first).eval(x);
+            return result;
+        case MOINS : result = (*entrees.first).eval(x)- (*entrees.first).eval(x);
+            return result;
+        case MULT : result = (*entrees.first).eval(x)* (*entrees.first).eval(x);
+            return result;
+        case DIV :result = (*entrees.first).eval(x)/ (*entrees.first).eval(x);
+            return result;
+    }
+     */
+     
     /*
     cout << "Erreur: le patron application<A,B> a été instancié avec des types A,B inconnus." << endl;
     B y = 1;
