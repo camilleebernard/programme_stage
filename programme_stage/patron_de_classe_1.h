@@ -61,12 +61,17 @@ using namespace std;
 #define DIV 4
 */
 //La norme préfère les constantes aux macro en C++ (par rapport au C)
+/*
 const int BASE = 0;
 const int PLUS = 1;
 const int MOINS = 2;
 const int MULT = 3;
 const int DIV = 4;
 const int COMP = 5;
+ */
+//Obligé de les mettre dans une enum sinon le constructeur de application<A,B> est utilisé pour faire des conversions implicites int->application<A,B>
+enum cat_appli{BUG,BASE,PLUS,MOINS,MULT,DIV,COMP};
+
 
 template <class A,class B>
 class application;
@@ -77,17 +82,21 @@ class compo_interne;
 template <class A,class B>
 class constante;
 
-
 //chercher une fonction qu'on puisse déclarer comme virtuelle pure pour rendre cette classe abstraite.
 
 template <class A,class B> class application{
 protected:
-    int cat;
+    cat_appli cat;
+    
+    //Il faut absolument que ce constructeur soit protégé et accessible uniquement dans les sous classes.
+    //Sinon il peut être utilisé pour une conversion implicite int-> application<A,B>
+    application(cat_appli);
 public:
     //constructeur pour une conversion B -> application<A,B> (fct constante)
     //application(B);
-    //constructeur
-    application(int);
+    inline application(void){
+        cat = BUG; //Par defaut
+    }
     //constructeur par recopie
     application(const application<A,B> &);
     //affectation
@@ -95,40 +104,42 @@ public:
     //domaine_def
     virtual bool domaine_def(A);
     
-    
     //obligé de déclarer les opérateur inline pour que les conversions implicites marchent
     
-    inline friend application<A,B>  operator+ (const application<A,B> & f,const application<A,B> & g){
+    
+    
+    inline friend compo_interne<A,B>  operator+ (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         compo_interne<A,B> h(entrees,PLUS);
         return h;
     }
 
-    inline friend application<A,B>  operator- (const application<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B>  operator- (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         compo_interne<A,B> h(entrees,MOINS);
         return h;
     }
 
-    inline friend application<A,B>  operator* (const application<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B>  operator* (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         compo_interne<A,B> h(entrees,MULT);
         return h;
     }
     
-    inline friend application<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-        compo_interne<A,B> h(entrees,DIV);
-        return h;
-    }
-    
-    inline friend application<A,B>  operator* (const constante<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B>  operator* (const constante<A,B> & f,const application<A,B> & g){
         cout<< "mult SCA_f" <<endl;
         const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
         pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
         compo_interne<A,B> h(entrees,MULT);
         return h;
     }
+    
+    inline friend compo_interne<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
+        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        compo_interne<A,B> h(entrees,DIV);
+        return h;
+    }
+    
 
     //Evaluation
     inline virtual B operator() (A a) const {
@@ -136,12 +147,29 @@ public:
         B b;
         return b;
     };
+    //affichage
+    //Obligé de creer une fonction info parcequ'on ne peut pas utiliser le typage dynamique avec une fonction amie
+    inline virtual ostream & info(ostream & os) const {
+        //Boost a une fonction qui permet  de mieux afficher les paramètres de type
+        //A tester si ça marche pour des types défini par l'utilisateur
+        
+        //os << ": "<< typeid(A).name() << "->"<< typeid(B).name() << endl << "cat : " << f.cat << endl << "entrees : (" << f.entrees.first << "," << f.entrees.second << ")";
+        os << ": "<< boost::typeindex::type_id<A>().pretty_name()  << "->"<< boost::typeindex::type_id<B>().pretty_name()  << endl;
+        return os;
+    }
+    /*
+    inline friend ostream & operator<<(ostream & os,const application<A,B> & f){
+        ostream is = os;
+        os << f.info(is);
+        return os;
+    }
+     */
 };
 
 //Problème quand je mets les définitions des méthodes dans de le fichier .cpp ça fait des erreurs de liens.
 // Début de solution ici: https://www.cs.technion.ac.il/users/yechiel/c++-faq/separate-template-class-defn-from-decl.html
 
-template <class A, class B> application<A,B>::application(int input_cat){
+template <class A, class B> application<A,B>::application(cat_appli input_cat){
     cat = input_cat;
 }
 /*
@@ -176,7 +204,7 @@ public:
     
     //constructeur
     //Ce type d'application n'est destiné à être construit que lors d'une composition (le mettre en privé ?)
-    compo_externe(pair<const application<A,C> *,const application<C,B>*>,int);
+    compo_externe(pair<const application<A,C> *,const application<C,B>*>,cat_appli);
     
     //constructeur par recopie
     compo_externe(const compo_externe<A,C,B> &);
@@ -192,11 +220,11 @@ public:
     virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
 };
 
-template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,int input_cat): application<A,B>(input_cat) {
+template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,cat_appli input_cat): application<A,B>(input_cat) {
     entrees = input_entrees;
 }
 
-template <class A,class C, class B>  compo_externe<A,C,B>::compo_externe(const compo_externe<A,C,B> & input_application): application(input_application){
+template <class A,class C, class B>  compo_externe<A,C,B>::compo_externe(const compo_externe<A,C,B> & input_application): application<A,B>(input_application){
     entrees = input_application.entrees;
 }
 
@@ -235,7 +263,7 @@ public:
     
     //constructeur
     //Ce type d'application n'est destiné à être construit que lors d'une composition (le mettre en privé ?)
-    compo_interne(pair<const application<A,B> *,const application<A,B> *>,int);
+    compo_interne(pair<const application<A,B> *,const application<A,B> *>,cat_appli);
     
     //constructeur par recopie
     compo_interne(const compo_interne<A,B> &);
@@ -251,11 +279,11 @@ public:
     virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
 };
 
-template <class A, class B>  compo_interne<A,B>::compo_interne(pair<const application<A,B> *,const application<A,B> *> input_entrees,int input_cat): application<A,B>(input_cat) {
+template <class A, class B>  compo_interne<A,B>::compo_interne(pair<const application<A,B> *,const application<A,B> *> input_entrees,cat_appli input_cat): application<A,B>(input_cat) {
     entrees = input_entrees;
 }
 
-template <class A, class B>  compo_interne<A,B>::compo_interne(const compo_interne<A,B> & input_application): application(input_application){
+template <class A, class B>  compo_interne<A,B>::compo_interne(const compo_interne<A,B> & input_application): application<A,B>(input_application){
     entrees = input_application.entrees;
 }
 
@@ -307,11 +335,11 @@ public:
     //Evaluation
     B  operator() (A) const;
     
-    inline ostream & info(ostream & os) const {
+    inline virtual ostream & info(ostream & os) const  {
         os << "Application constante égale à "<< y <<endl;
         return os;
     }
-    
+    /*
     inline friend ostream & operator<<(ostream & os,const constante & f){
         //Boost a une fonction qui permet  de mieux afficher les paramètres de type
         //A tester si ça marche pour des types défini par l'utilisateur
@@ -322,7 +350,7 @@ public:
         os << "Application constante égale à "<< f.y <<endl;
         return os;
     }
-    
+    */
 };
 /*
 template <class A,class B> constante<A,B>::constante(const string input_nom,B input_x): application<A,B>(input_nom){
@@ -352,13 +380,14 @@ class paquet_d_onde: public application<double,complex<double> > {
         complex<double>  operator() (double) const;
     
     
-    inline ostream & info(ostream & os) const {
+    inline virtual ostream & info(ostream & os) const  {
         os << "paquet_d_onde de parametres : "<<endl;
         os << "mu_x : "<< mu_x <<endl;
         os << "sigma_x : "<< sigma_x <<endl;
         os << "mu_xi : "<< mu_xi <<endl;
         return os;
     }
+    /*
     inline friend ostream & operator<<(ostream & os,const paquet_d_onde & f){
         //Boost a une fonction qui permet  de mieux afficher les paramètres de type
         //A tester si ça marche pour des types défini par l'utilisateur
@@ -372,6 +401,7 @@ class paquet_d_onde: public application<double,complex<double> > {
         os << "mu_xi : "<< f.mu_xi <<endl;
         return os;
     }
+     */
 };
 
 //Le constructeur de application<double,complex<double> > est appelé implicitement ?

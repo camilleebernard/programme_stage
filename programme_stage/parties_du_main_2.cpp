@@ -205,15 +205,16 @@ void partie_5(void){
     cout << "NOM(a)" << nom << endl;
     
     //Test info()
-    INFO(a);// <-> cout << NOM(a) << a << endl;
-    INFO(d);
+    //INFO(a);// <-> cout << NOM(a) << a << endl;
+    //INFO(d);
 }
 void partie_6(void){
     //Pour utiliser les fonctions constantes:
     constante<int, double> a(3.);
-    INFO(a);
-    application<int,double> b = 3.*a;
-    INFO(b);
+    //INFO(a);
+    application<int,double> b;
+    b = 3.0*a;
+    //INFO(b);
     cout << "b(0.)" << b(0.) << endl;
     
 }
