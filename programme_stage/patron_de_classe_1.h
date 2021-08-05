@@ -220,6 +220,7 @@ public:
     virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
 };
 
+
 template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,cat_appli input_cat): application<A,B>(input_cat) {
     entrees = input_entrees;
 }
@@ -358,7 +359,7 @@ template <class A,class B> constante<A,B>::constante(const string input_nom,B in
 }
  */
 template <class A,class B> constante<A,B>::constante(B input_y): application<A,B>(BASE){
-    cout << "conversion implicite" << endl;
+    cout << "Conversion implicite B->constante, ou appel du constructeur de constante" << endl;
     y = input_y;
 }
 template<class A,class B> B  constante<A,B>::operator() (A x) const{

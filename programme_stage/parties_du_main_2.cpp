@@ -211,12 +211,20 @@ void partie_5(void){
 void partie_6(void){
     //Pour utiliser les fonctions constantes:
     constante<int, double> a(3.);
+    constante<int, double> b(4.);
     //INFO(a);
-    application<int,double> b;
-    b = 3.0*a;
-    //INFO(b);
-    cout << "b(0.)" << b(0.) << endl;
     
+    //Pas possible de déclarer une appli puis de la définir par une compo_interne,
+    //pas possible de contourner ça avec des pointeurs.
+    
+    //application<int,double> * adr_b;
+    //(*adr_b) = a+b;
+    //cout << "b(0.)" << (*adr_b)(0.) << endl;
+    //INFO(b);
+    
+    
+    compo_interne<int,double> c = a+b;
+    cout << "c(0.)" << c(0.) << endl;
 }
 
 complex<double> psi_0_X_psi_1_wp(double x_0, double p_0, double sigma_0,double x_1, double p_1, double sigma_1){
