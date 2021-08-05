@@ -12,6 +12,8 @@
 #include <complex>
 using namespace std;
 #include<boost/type_index.hpp> //pour convertir paramètre de type->string
+#include<boost/any.hpp> //type erasure
+
 
 #include <math.h>
 #include<float.h>
@@ -66,6 +68,7 @@ const int PLUS = 1;
 const int MOINS = 2;
 const int MULT = 3;
 const int DIV = 4;
+const int COMP = 5;
 
 template <class A,class B>
 class application;
@@ -73,30 +76,18 @@ template <class A,class B>
 class constante;
 
 
-/*
-template <class A,class B>
-application<A,B>  operator+ (const application<A,B> &,const application<A,B> &);
-template <class A,class B>
-application<A,B>  operator- (const application<A,B> &,const application<A,B> &);
-template <class A,class B>
-application<A,B>  operator* (const application<A,B> &,const application<A,B> &);
-template <class A,class B>
-application<A,B>  operator/ (const application<A,B> &,const application<A,B> &);
-*/
-
-
 //chercher une fonction qu'on puisse déclarer comme virtuelle pure pour rendre cette classe abstraite.
 
 template <class A,class B> class application {
 protected:
-    pair<const application<A,B>*,const application<A,B>*> entrees;
+    pair<const boost::any*,const boost::any*> entrees;
     int cat;
 public:
     //constructeur pour une conversion B -> application<A,B> (fct constante)
     //application(B);
     //constructeur
     application(void);
-    application(pair<const application<A,B>*,const application<A,B>*>,int);
+    application(pair<const boost::any*,const boost::any*>,int);
     
     //constructeur par recopie
     application(const application<A,B> &);
@@ -155,25 +146,27 @@ public:
     //obligé de déclarer les opérateur inline pour que les conversions implicites marchent
     
     inline friend application<A,B>  operator+ (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        boost::any F(f);
+        boost::any G(g);
+        pair<const boost::any*,const boost::any*> entrees(&F,&G);
         application<A,B> h(entrees,PLUS);
         return h;
     }
 
     inline friend application<A,B>  operator- (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        pair<const boost::any*,const boost::any*> entrees(&f,&g);
         application<A,B> h(entrees,MOINS);
         return h;
     }
 
     inline friend application<A,B>  operator* (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        pair<const boost::any*,const boost::any*> entrees(&f,&g);
         application<A,B> h(entrees,MULT);
         return h;
     }
     
     inline friend application<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
-        pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
+        pair<const boost::any*,const boost::any*> entrees(&f,&g);
         application<A,B> h(entrees,DIV);
         return h;
     }
@@ -182,7 +175,7 @@ public:
         cout<< "mult SCA_f" <<endl;
         const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
         //cout << "(*adr_f)(5)"<<(*adr_f)(5) << endl;
-        pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
+        pair<const boost::any*,const boost::any*> entrees(adr_f,&g);
         application<A,B> h(entrees,MULT);
         return h;
     }
@@ -217,7 +210,7 @@ template <class A, class B> application<A,B>::application(B y){
     *this = f;
 }
 */
-template <class A, class B> application<A,B>::application(pair<const application<A,B>*, const application<A,B>*> input_entrees,int input_cat){
+template <class A, class B> application<A,B>::application(pair<const boost::any*,const boost::any*> input_entrees,int input_cat){
     cat = input_cat;
     entrees = input_entrees;
 }
@@ -244,6 +237,9 @@ template <class A, class B> bool application<A,B>::domaine_def(A x){
 template <class A,class B> B application<A,B>::operator() (A x) const {
     B result;
     //cout << "catégorie"<< cat << endl;
+    application<A,B> f = boost::any_cast<application<A,B> > *entrees.first;
+    application<A,B> g = boost::any_cast<application<A,B> > *entrees.second;
+    /*
     switch(cat){
         case PLUS : result = (*entrees.first)(x)+ (*entrees.second)(x);
             return result;
@@ -254,6 +250,19 @@ template <class A,class B> B application<A,B>::operator() (A x) const {
         case DIV :result = ((*entrees.first)(x))/ ((*entrees.second)(x));
             return result;
     }
+     */
+    
+    switch(cat){
+        case PLUS : result = f(x)+ g(x);
+            return result;
+        case MOINS : result = f(x)- g(x);
+            return result;
+        case MULT : result = f(x)* g(x);
+            return result;
+        case DIV :result = f(x)/ g(x);
+            return result;
+    }
+    
     /*
     cout << "Erreur: le patron application<A,B> a été instancié avec des types A,B inconnus." << endl;
     B y = 1;
