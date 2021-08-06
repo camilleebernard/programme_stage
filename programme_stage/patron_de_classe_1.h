@@ -87,15 +87,15 @@ class constante;
 template <class A,class B> class application{
 protected:
     cat_appli cat;
-    
-    //Il faut absolument que ce constructeur soit protégé et accessible uniquement dans les sous classes.
-    //Sinon il peut être utilisé pour une conversion implicite int-> application<A,B>
-    application(cat_appli);
+    application<A,B> * adr_def = NULL;
+    //Ce constructeur n'est pas censé être utilisé par l'utilisateur.
+    application(application<A,B> *, cat_appli);
 public:
     //constructeur pour une conversion B -> application<A,B> (fct constante)
     //application(B);
     inline application(void){
         cat = BUG; //Par defaut
+        adr_def = NULL;
     }
     //constructeur par recopie
     application(const application<A,B> &);
@@ -108,44 +108,64 @@ public:
     
     
     
-    inline friend compo_interne<A,B>  operator+ (const application<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B> & operator+ (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-        compo_interne<A,B> h(entrees,PLUS);
-        return h;
+        // création dynamique de l'objet qui est retourné par référence
+        // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        compo_interne<A,B> * adr_h;
+        adr_h = new compo_interne<A,B>(entrees,PLUS);
+        return *adr_h;
     }
 
-    inline friend compo_interne<A,B>  operator- (const application<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B> & operator- (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-        compo_interne<A,B> h(entrees,MOINS);
-        return h;
+        // création dynamique de l'objet qui est retourné par référence
+        // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        compo_interne<A,B> * adr_h;
+        adr_h = new compo_interne<A,B>(entrees,MOINS);
+        return *adr_h;
     }
 
-    inline friend compo_interne<A,B>  operator* (const application<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B> & operator* (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-        compo_interne<A,B> h(entrees,MULT);
-        return h;
+        // création dynamique de l'objet qui est retourné par référence
+        // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        compo_interne<A,B> * adr_h;
+        adr_h = new compo_interne<A,B>(entrees,MULT);
+        return *adr_h;
     }
     
-    inline friend compo_interne<A,B>  operator* (const constante<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B> & operator* (const constante<A,B> & f,const application<A,B> & g){
         cout<< "mult SCA_f" <<endl;
         const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
         pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
-        compo_interne<A,B> h(entrees,MULT);
-        return h;
+        // création dynamique de l'objet qui est retourné par référence
+        // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        compo_interne<A,B> * adr_h;
+        adr_h = new compo_interne<A,B>(entrees,MULT);
+        return *adr_h;
     }
     
-    inline friend compo_interne<A,B>  operator/ (const application<A,B> & f,const application<A,B> & g){
+    inline friend compo_interne<A,B> & operator/ (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
-        compo_interne<A,B> h(entrees,DIV);
-        return h;
+        // création dynamique de l'objet qui est retourné par référence
+        // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        compo_interne<A,B> * adr_h;
+        adr_h = new compo_interne<A,B>(entrees,DIV);
+        return *adr_h;
     }
     
 
     //Evaluation
     inline virtual B operator() (A a) const {
-        cout << "Erreur : application<A,B>::() applelée" << endl;
-        B b;
-        return b;
+        //Voir si ce test ralenti beaucoup l'évaluation
+        if(adr_def!=NULL){
+            return (*adr_def)(a);
+        }else{
+            cout << "Problème d'évaluation: adr_def==NULL" << endl;
+            B b;
+            return b;
+        }
     };
     //affichage
     //Obligé de creer une fonction info parcequ'on ne peut pas utiliser le typage dynamique avec une fonction amie
@@ -169,9 +189,11 @@ public:
 //Problème quand je mets les définitions des méthodes dans de le fichier .cpp ça fait des erreurs de liens.
 // Début de solution ici: https://www.cs.technion.ac.il/users/yechiel/c++-faq/separate-template-class-defn-from-decl.html
 
-template <class A, class B> application<A,B>::application(cat_appli input_cat){
+template <class A, class B> application<A,B>::application(application<A,B> * input_adr_def, cat_appli input_cat){
     cat = input_cat;
+    adr_def = input_adr_def;
 }
+
 /*
 template <class A, class B> application<A,B>::application(B y){
     cout << "conv implicite" << endl;
@@ -180,17 +202,20 @@ template <class A, class B> application<A,B>::application(B y){
 }
 */
 
-
 template <class A, class B> application<A,B>::application(const application<A,B> & input_application){
     cat = input_application.cat;
+    adr_def = input_application.adr_def;
 }
 //rerediger
 template <class A, class B> application<A,B> & application<A,B>::operator= (const application<A,B> & input_application){
+    cout << "Appel" << endl;
     if(this!= &input_application){
         cat = input_application.cat;
+        adr_def = input_application.adr_def;
     }
     return *this;
 }
+
 template <class A, class B> bool application<A,B>::domaine_def(A x){
     //Par defaut tout R ou tout C
     return true;
@@ -221,7 +246,7 @@ public:
 };
 
 
-template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,cat_appli input_cat): application<A,B>(input_cat) {
+template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,cat_appli input_cat): application<A,B>(this,input_cat) {
     entrees = input_entrees;
 }
 
@@ -245,7 +270,7 @@ template <class A,class C, class B> compo_externe<A,C,B> & compo_externe<A,C,B>:
 // Je choisi de la définir mais il y aura une erreur si le constructeur du type/class B requiert des paramètres
 template <class A,class C,class B> B compo_externe<A,C,B>::operator() (A x) const {
     B result;
-    //cout << "catégorie"<< cat << endl;
+    cout << "Appel evaluation d'application" << endl;
     switch((*this).cat){
         case COMP : result = (*entrees.first)((*entrees.second)(x));
             return result;
@@ -280,7 +305,7 @@ public:
     virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
 };
 
-template <class A, class B>  compo_interne<A,B>::compo_interne(pair<const application<A,B> *,const application<A,B> *> input_entrees,cat_appli input_cat): application<A,B>(input_cat) {
+template <class A, class B>  compo_interne<A,B>::compo_interne(pair<const application<A,B> *,const application<A,B> *> input_entrees,cat_appli input_cat): application<A,B>(this,input_cat) {
     entrees = input_entrees;
 }
 
@@ -358,7 +383,7 @@ template <class A,class B> constante<A,B>::constante(const string input_nom,B in
     x = input_x;
 }
  */
-template <class A,class B> constante<A,B>::constante(B input_y): application<A,B>(BASE){
+template <class A,class B> constante<A,B>::constante(B input_y): application<A,B>(this,BASE){
     cout << "Conversion implicite B->constante, ou appel du constructeur de constante" << endl;
     y = input_y;
 }
@@ -406,7 +431,7 @@ class paquet_d_onde: public application<double,complex<double> > {
 };
 
 //Le constructeur de application<double,complex<double> > est appelé implicitement ?
-paquet_d_onde::paquet_d_onde(double input_mu_x,double input_sigma_x,double input_mu_xi):application(BASE) {
+paquet_d_onde::paquet_d_onde(double input_mu_x,double input_sigma_x,double input_mu_xi):application(this,BASE) {
     mu_x = input_mu_x;
     sigma_x = input_sigma_x;
     mu_xi = input_mu_xi;

@@ -222,9 +222,29 @@ void partie_6(void){
     //cout << "b(0.)" << (*adr_b)(0.) << endl;
     //INFO(b);
     
-    
+    //Test appel explicite de compo_interne
+    /*
     compo_interne<int,double> c = a+b;
     cout << "c(0.)" << c(0.) << endl;
+    */
+    //test definir une appli, après sa def
+    /*
+    application<int,double> d;
+    d= a+b;
+    cout << "d(0.)" << d(0.) << endl;
+    */
+    //Test conversion implicite B->appli constante<A,B>
+    /*
+    application<int, double> e;
+    e = 3. *e;
+    cout << "e(0.)" << e(0.) << endl;
+    */
+    //Problème ici, normal car la def de appli est vide, mais il faudrait l'afficher et stoper le prog.
+    constante<int, double> f(6.);
+    application<int , double> g;
+    g = 3.*f;
+    cout << "g(0.)" << g(0.) << endl;
+    
 }
 
 complex<double> psi_0_X_psi_1_wp(double x_0, double p_0, double sigma_0,double x_1, double p_1, double sigma_1){
