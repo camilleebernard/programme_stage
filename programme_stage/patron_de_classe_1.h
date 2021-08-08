@@ -11,6 +11,7 @@
 #include <iostream>
 #include <complex>
 using namespace std;
+
 #include<boost/type_index.hpp> //pour convertir paramètre de type->string
 
 #include <math.h>
@@ -94,7 +95,14 @@ public:
     //constructeur pour une conversion B -> application<A,B> (fct constante)
     //application(B);
     inline application(void){
-        cat = BUG; //Par defaut
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout << "Création d'une application de " << boost::typeindex::type_id<A>().pretty_name() << " vers "<< boost::typeindex::type_id<B>().pretty_name()<< endl;
+        cout << "  à l'adresse " << this << endl;
+        cout << "Cette application n'a pas de définition." << endl;
+        cout << "-----------------------------------" << endl;
+#endif
+        cat = BUG;
         adr_def = NULL;
     }
     //constructeur par recopie
@@ -105,8 +113,6 @@ public:
     virtual bool domaine_def(A);
     
     //obligé de déclarer les opérateur inline pour que les conversions implicites marchent
-    
-    
     
     inline friend compo_interne<A,B> & operator+ (const application<A,B> & f,const application<A,B> & g){
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
@@ -159,6 +165,9 @@ public:
     //Evaluation
     inline virtual B operator() (A a) const {
         //Voir si ce test ralenti beaucoup l'évaluation
+#ifdef COMMENTAIRES
+        cout << "Evaluation de l'application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à d'adresse " << this << endl;
+#endif
         if(adr_def!=NULL){
             return (*adr_def)(a);
         }else{
@@ -190,6 +199,12 @@ public:
 // Début de solution ici: https://www.cs.technion.ac.il/users/yechiel/c++-faq/separate-template-class-defn-from-decl.html
 
 template <class A, class B> application<A,B>::application(application<A,B> * input_adr_def, cat_appli input_cat){
+#ifdef COMMENTAIRES
+    cout << "Création d'une application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
+    cout << "Avec les paramètres : " << endl;
+    cout << "cat " << cat << endl;
+    cout << "adr_def " << adr_def << endl;
+#endif
     cat = input_cat;
     adr_def = input_adr_def;
 }
@@ -208,7 +223,9 @@ template <class A, class B> application<A,B>::application(const application<A,B>
 }
 //rerediger
 template <class A, class B> application<A,B> & application<A,B>::operator= (const application<A,B> & input_application){
-    cout << "Appel" << endl;
+#ifdef COMMENTAIRES
+    cout << "Appel de application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "::operator= par" <<this << endl;
+#endif
     if(this!= &input_application){
         cat = input_application.cat;
         adr_def = input_application.adr_def;
@@ -230,7 +247,6 @@ public:
     //constructeur
     //Ce type d'application n'est destiné à être construit que lors d'une composition (le mettre en privé ?)
     compo_externe(pair<const application<A,C> *,const application<C,B>*>,cat_appli);
-    
     //constructeur par recopie
     compo_externe(const compo_externe<A,C,B> &);
     //affectation
@@ -246,7 +262,7 @@ public:
 };
 
 
-template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,cat_appli input_cat): application<A,B>(this,input_cat) {
+template <class A,class C, class B> compo_externe<A,C,B>::compo_externe(pair<const application<A,C> *,const application<C,B>*> input_entrees,cat_appli input_cat): application<A,B>(this,input_cat){
     entrees = input_entrees;
 }
 
@@ -306,6 +322,9 @@ public:
 };
 
 template <class A, class B>  compo_interne<A,B>::compo_interne(pair<const application<A,B> *,const application<A,B> *> input_entrees,cat_appli input_cat): application<A,B>(this,input_cat) {
+#ifdef COMMENTAIRES
+    cout << "Création d'une compo_interne<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
+#endif
     entrees = input_entrees;
 }
 
@@ -384,7 +403,9 @@ template <class A,class B> constante<A,B>::constante(const string input_nom,B in
 }
  */
 template <class A,class B> constante<A,B>::constante(B input_y): application<A,B>(this,BASE){
-    cout << "Conversion implicite B->constante, ou appel du constructeur de constante" << endl;
+#ifdef COMMENTAIRES
+    cout << "Création d'une constante<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
+#endif
     y = input_y;
 }
 template<class A,class B> B  constante<A,B>::operator() (A x) const{
