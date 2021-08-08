@@ -210,8 +210,8 @@ void partie_5(void){
 }
 void partie_6(void){
     //Pour utiliser les fonctions constantes:
-    constante<int, double> a(3.);
-    constante<int, double> b(4.);
+    //constante<int, double> a(3.);
+    //constante<int, double> b(4.);
     //INFO(a);
     
     //Pas possible de déclarer une appli puis de la définir par une compo_interne,
@@ -241,8 +241,8 @@ void partie_6(void){
     */
     //Problème ici, normal car la def de appli est vide, mais il faudrait l'afficher et stoper le prog.
     constante<int, double> f(6.);
-    application<int , double> g = 3. *f;
-    g = 3.*f;
+    application<int ,double> g = 3. *f;
+    //g = 3.*f;
     cout << "g(0.)" << g(0.) << endl;
     
 }

@@ -97,8 +97,8 @@ public:
     inline application(void){
 #ifdef COMMENTAIRES
         cout << "-----------------------------------" << endl;
-        cout << "Création d'une application de " << boost::typeindex::type_id<A>().pretty_name() << " vers "<< boost::typeindex::type_id<B>().pretty_name()<< endl;
-        cout << "  à l'adresse " << this << endl;
+        cout << "Création d'une application< " << boost::typeindex::type_id<A>().pretty_name() << " , "<< boost::typeindex::type_id<B>().pretty_name()<< endl;
+        cout << " >  à l'adresse " << this << endl;
         cout << "Cette application n'a pas de définition." << endl;
         cout << "-----------------------------------" << endl;
 #endif
@@ -118,6 +118,7 @@ public:
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         // création dynamique de l'objet qui est retourné par référence
         // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        // La destruction se fait lors de l'apel du destructeur de compo_interne, comme on a déclaré tout les destructeur virtuel, c'est bien celui-ci qui sera appelé et pas le destructeur de application<A,B>.
         compo_interne<A,B> * adr_h;
         adr_h = new compo_interne<A,B>(entrees,PLUS);
         return *adr_h;
@@ -127,28 +128,63 @@ public:
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         // création dynamique de l'objet qui est retourné par référence
         // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        // La destruction se fait lors de l'apel du destructeur de compo_interne, comme on a déclaré tout les destructeur virtuel, c'est bien celui-ci qui sera appelé et pas le destructeur de application<A,B>.
         compo_interne<A,B> * adr_h;
         adr_h = new compo_interne<A,B>(entrees,MOINS);
         return *adr_h;
     }
 
     inline friend compo_interne<A,B> & operator* (const application<A,B> & f,const application<A,B> & g){
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout <<"Debut de  :" << endl;
+        cout << "friend compo_interne<A,B> & operator* (const application<A,B> & f,const application<A,B> & g)"<<endl;
+        cout << "<A,B> : < " << boost::typeindex::type_id<A>().pretty_name() << " , "<< boost::typeindex::type_id<B>().pretty_name() << " > " << endl;
+        cout << "-----------------------------------" << endl;
+#endif
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         // création dynamique de l'objet qui est retourné par référence
         // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        // La destruction se fait lors de l'apel du destructeur de compo_interne, comme on a déclaré tout les destructeur virtuel, c'est bien celui-ci qui sera appelé et pas le destructeur de application<A,B>.
         compo_interne<A,B> * adr_h;
         adr_h = new compo_interne<A,B>(entrees,MULT);
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout <<"Fin de  :" << endl;
+        cout << "friend compo_interne<A,B> & operator* (const application<A,B> & f,const application<A,B> & g)"<<endl;
+        cout << "<A,B> : < " << boost::typeindex::type_id<A>().pretty_name() << " , "<< boost::typeindex::type_id<B>().pretty_name() << " > " << endl;
+        cout << "-----------------------------------" << endl;
+#endif
         return *adr_h;
     }
     
     inline friend compo_interne<A,B> & operator* (const constante<A,B> & f,const application<A,B> & g){
-        cout<< "mult SCA_f" <<endl;
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout <<"Debut de  :" << endl;
+        cout << "friend compo_interne<A,B> & operator* (const constante<A,B> & f,const application<A,B> & g)"<<endl;
+        cout << "<A,B> : < " << boost::typeindex::type_id<A>().pretty_name() << " , "<< boost::typeindex::type_id<B>().pretty_name() << " > " << endl;
+        cout << "-----------------------------------" << endl;
+#endif
+        //Lors d'une conversion implicite scalaire-> constante<A,B>, un objet temporaire constante<A,B> est créé, le problème est qu'il est suprimé à la fin de la fonction et lors de l'evaluation on ne peut plus l'utiliser.
+        //Une solution est de créer dynamiquement une constante<A,B> qui est égale à l'objet temporaire, mais ce n'est pas une bonne idée, d'une part parceque si la constante en entrée n'as pas été créé de manière implicite elle va rester après la fin de cette fonction et au final on aura 2 constantes qui correspondent à la même chose, d'autre part parce si on crée un nouvel objet à chaque fois qu'on multiplie une fonction par un scalaire ça va vite surcharger la RAM je pense.
+        
+        
         const application<A,B>* adr_f = &f;//pour qu'il n'y ait pas de conversion implicite de f en application
         pair<const application<A,B>*,const application<A,B>*> entrees(adr_f,&g);
         // création dynamique de l'objet qui est retourné par référence
         // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        // La destruction se fait lors de l'apel du destructeur de compo_interne, comme on a déclaré tout les destructeur virtuel, c'est bien celui-ci qui sera appelé et pas le destructeur de application<A,B>.
         compo_interne<A,B> * adr_h;
         adr_h = new compo_interne<A,B>(entrees,MULT);
+        
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout <<"Fin de  :" << endl;
+        cout << "friend compo_interne<A,B> & operator* (const constante<A,B> & f,const application<A,B> & g)"<<endl;
+        cout << "<A,B> : < " << boost::typeindex::type_id<A>().pretty_name() << " , "<< boost::typeindex::type_id<B>().pretty_name() << " > " << endl;
+        cout << "-----------------------------------" << endl;
+#endif
         return *adr_h;
     }
     
@@ -156,6 +192,7 @@ public:
         pair<const application<A,B>*,const application<A,B>*> entrees(&f,&g);
         // création dynamique de l'objet qui est retourné par référence
         // il faut prévoir de le suprimer dans le main ou dans une autre fonction
+        // La destruction se fait lors de l'apel du destructeur de compo_interne, comme on a déclaré tout les destructeur virtuel, c'est bien celui-ci qui sera appelé et pas le destructeur de application<A,B>.
         compo_interne<A,B> * adr_h;
         adr_h = new compo_interne<A,B>(entrees,DIV);
         return *adr_h;
@@ -166,7 +203,7 @@ public:
     inline virtual B operator() (A a) const {
         //Voir si ce test ralenti beaucoup l'évaluation
 #ifdef COMMENTAIRES
-        cout << "Evaluation de l'application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à d'adresse " << this << endl;
+        cout << "Evaluation de l'application < " << boost::typeindex::type_id<A>().pretty_name() << " , "<<boost::typeindex::type_id<B>().pretty_name() << " > à d'adresse " << this << endl;
 #endif
         if(adr_def!=NULL){
             return (*adr_def)(a);
@@ -193,20 +230,29 @@ public:
         return os;
     }
      */
+    
+    
+    inline virtual ~application(void){
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout << "Destruction d'application< " << boost::typeindex::type_id<A>().pretty_name()<< " , "<<boost::typeindex::type_id<B>().pretty_name() << " > à l'adresse :  " << this << endl;
+        cout << "-----------------------------------" << endl;
+#endif
+    }
 };
 
 //Problème quand je mets les définitions des méthodes dans de le fichier .cpp ça fait des erreurs de liens.
 // Début de solution ici: https://www.cs.technion.ac.il/users/yechiel/c++-faq/separate-template-class-defn-from-decl.html
 
 template <class A, class B> application<A,B>::application(application<A,B> * input_adr_def, cat_appli input_cat){
+    cat = input_cat;
+    adr_def = input_adr_def;
 #ifdef COMMENTAIRES
     cout << "Création d'une application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
     cout << "Avec les paramètres : " << endl;
     cout << "cat " << cat << endl;
     cout << "adr_def " << adr_def << endl;
 #endif
-    cat = input_cat;
-    adr_def = input_adr_def;
 }
 
 /*
@@ -224,7 +270,7 @@ template <class A, class B> application<A,B>::application(const application<A,B>
 //rerediger
 template <class A, class B> application<A,B> & application<A,B>::operator= (const application<A,B> & input_application){
 #ifdef COMMENTAIRES
-    cout << "Appel de application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "::operator= par" <<this << endl;
+    cout << "Appel de application<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << ">::operator= par  " <<this << endl;
 #endif
     if(this!= &input_application){
         cat = input_application.cat;
@@ -319,11 +365,22 @@ public:
     }
     //Evaluation
     virtual B operator() (A) const; //fonction virtuelle et peut agir sur des objets constants
+    
+    inline virtual ~compo_interne(void){
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout << "Destruction de la compo_interne<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
+        cout << "-----------------------------------" << endl;
+#endif
+        delete this;
+    }
 };
 
 template <class A, class B>  compo_interne<A,B>::compo_interne(pair<const application<A,B> *,const application<A,B> *> input_entrees,cat_appli input_cat): application<A,B>(this,input_cat) {
 #ifdef COMMENTAIRES
+    cout << "-----------------------------------" << endl;
     cout << "Création d'une compo_interne<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
+    cout << "-----------------------------------" << endl;
 #endif
     entrees = input_entrees;
 }
@@ -396,6 +453,13 @@ public:
         return os;
     }
     */
+    inline virtual ~constante(void){
+#ifdef COMMENTAIRES
+        cout << "-----------------------------------" << endl;
+        cout << "Destruction de la constante<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> égale à " << y <<" à l'adresse :  " << this << endl;
+        cout << "-----------------------------------" << endl;
+#endif
+    }
 };
 /*
 template <class A,class B> constante<A,B>::constante(const string input_nom,B input_x): application<A,B>(input_nom){
@@ -403,10 +467,12 @@ template <class A,class B> constante<A,B>::constante(const string input_nom,B in
 }
  */
 template <class A,class B> constante<A,B>::constante(B input_y): application<A,B>(this,BASE){
-#ifdef COMMENTAIRES
-    cout << "Création d'une constante<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> à l'adresse :  " << this << endl;
-#endif
     y = input_y;
+#ifdef COMMENTAIRES
+    cout << "-----------------------------------" << endl;
+    cout << "Création d'une constante<" << boost::typeindex::type_id<A>().pretty_name()<< ","<<boost::typeindex::type_id<B>().pretty_name() << "> égale à " << y <<" à l'adresse :  " << this << endl;
+    cout << "-----------------------------------" << endl;
+#endif
 }
 template<class A,class B> B  constante<A,B>::operator() (A x) const{
     return y;

@@ -4,8 +4,9 @@
 //
 //  Created by Camille Bernard on 01/08/2021.
 //
-//#define COMMENTAIRES
 
+//Pour afficher une description du programme.
+#define COMMENTAIRES
 
 #ifndef parties_du_main_2_hpp
 #define parties_du_main_2_hpp
